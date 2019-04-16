@@ -14,7 +14,7 @@ services:
   config:
     environment:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-config
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/config
     hostname: config
     restart: always
     logging:
@@ -25,7 +25,7 @@ services:
   registry:
     environment:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-registry
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/registry
     hostname: registry
     restart: always
     depends_on:
@@ -41,7 +41,7 @@ services:
   gateway:
     environment:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-gateway
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/gateway
     hostname: gateway
     restart: always
     depends_on:
@@ -61,7 +61,7 @@ services:
       STATISTICS_SERVICE_PASSWORD: $STATISTICS_SERVICE_PASSWORD
       ACCOUNT_SERVICE_PASSWORD: $ACCOUNT_SERVICE_PASSWORD
       MONGODB_PASSWORD: $MONGODB_PASSWORD
-    image: sqshq/piggymetrics-auth-service
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/auth-service
     hostname: auth-service
     restart: always
     depends_on:
@@ -75,7 +75,7 @@ services:
   auth-mongodb:
     environment:
       MONGODB_PASSWORD: $MONGODB_PASSWORD
-    image: sqshq/piggymetrics-mongodb
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
     hostname: auth-mongodb
     restart: always
     logging:
@@ -88,7 +88,7 @@ services:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
       ACCOUNT_SERVICE_PASSWORD: $ACCOUNT_SERVICE_PASSWORD
       MONGODB_PASSWORD: $MONGODB_PASSWORD
-    image: sqshq/piggymetrics-account-service
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/account-service
     hostname: account-service
     restart: always
     depends_on:
@@ -103,7 +103,7 @@ services:
     environment:
       INIT_DUMP: account-service-dump.js
       MONGODB_PASSWORD: $MONGODB_PASSWORD
-    image: sqshq/piggymetrics-mongodb
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
     hostname: account-mongodb
     restart: always
     logging:
@@ -116,7 +116,7 @@ services:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
       MONGODB_PASSWORD: $MONGODB_PASSWORD
       STATISTICS_SERVICE_PASSWORD: $STATISTICS_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-statistics-service
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/statistics-service
     hostname: statistics-service
     restart: always
     depends_on:
@@ -130,7 +130,7 @@ services:
   statistics-mongodb:
     environment:
       MONGODB_PASSWORD: $MONGODB_PASSWORD
-    image: sqshq/piggymetrics-mongodb
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
     hostname: statistics-mongodb
     restart: always
     logging:
@@ -143,7 +143,7 @@ services:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
       MONGODB_PASSWORD: $MONGODB_PASSWORD
       NOTIFICATION_SERVICE_PASSWORD: $NOTIFICATION_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-notification-service
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/notification-service
     hostname: notification-service
     restart: always
     depends_on:
@@ -155,7 +155,7 @@ services:
         max-file: "10"
 
   notification-mongodb:
-    image: sqshq/piggymetrics-mongodb
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
     hostname: notification-mongodb
     restart: always
     environment:
@@ -168,7 +168,7 @@ services:
   monitoring:
     environment:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-monitoring
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/monitoring
     hostname: monitoring
     restart: always
     depends_on:
@@ -184,7 +184,7 @@ services:
   turbine-stream-service:
     environment:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-turbine-stream-service
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/turbine-stream-service
     hostname: turbine-stream-service
     restart: always
     depends_on:
