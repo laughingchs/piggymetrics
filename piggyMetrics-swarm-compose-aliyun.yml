@@ -105,6 +105,7 @@ services:
       aliyun.auto_scaling.min_instances: '1'
       aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
       aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
+      aliyun.log.timestamp: true # Docker 在收集日志的时候可以选择是否添加 timestamp
     oom-kill-disable: true
     memswap_limit: 2000000000
     shm_size: 67108864
@@ -126,8 +127,6 @@ services:
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/auth-service:latest
     hostname: auth-service
     restart: always
-    depends_on:
-      - config
     logging:
       options:
         max-file: '10'
@@ -136,6 +135,8 @@ services:
       aliyun.scale: '1'
       aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
       aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
+      aliyun.log.timestamp: true # Docker 在收集日志的时候可以选择是否添加 timestamp
+      aliyun.depends: config
     volumes:
       - 'volume_name_piggymetrics:/data/oss:rw'
       - 'VN_NAS_PIGGYMETRICS:/data/nas:rw'
@@ -176,6 +177,7 @@ services:
       aliyun.scale: '1'
       aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
       aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
+      aliyun.log.timestamp: true # Docker 在收集日志的时候可以选择是否添加 timestamp
   account-mongodb:
     environment:
       INIT_DUMP: account-service-dump.js
@@ -206,6 +208,7 @@ services:
     labels:
       aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
       aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
+      aliyun.log.timestamp: true # Docker 在收集日志的时候可以选择是否添加 timestamp
   statistics-mongodb:
     environment:
       MONGODB_PASSWORD: $MONGODB_PASSWORD
@@ -235,6 +238,7 @@ services:
     labels:
       aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
       aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
+      aliyun.log.timestamp: true # Docker 在收集日志的时候可以选择是否添加 timestamp
   notification-mongodb:
     image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
     hostname: notification-mongodb
