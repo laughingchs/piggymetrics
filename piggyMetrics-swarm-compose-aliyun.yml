@@ -21,6 +21,7 @@ services:
   config:
     environment:
       - CONFIG_SERVICE_PASSWORD=configPwd
+      - 'availability:az==2'
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/config:latest
     hostname: config
@@ -30,12 +31,26 @@ services:
         max-file: '10'
         max-size: 10m
     labels:
-      aliyun.scale: '3'
-    memswap_limit: 0
-    shm_size: 0
-    memswap_reservation: 0
+      aliyun.probe.cmd: >-
+        curl -u user:configPwd
+        http://127.0.0.1:8888/account-service/spring.data.mongodb.host
+      aliyun.scale: '1'
+      aliyun.rolling_updates: 'true'
+      aliyun.auto_scaling.max_cpu: '70'
+      aliyun.auto_scaling.min_cpu: '30'
+      aliyun.auto_scaling.step: '1'
+      aliyun.auto_scaling.max_instances: '10'
+      aliyun.auto_scaling.min_instances: '1'
+    oom-kill-disable: true
+    memswap_limit: 2000000000
+    shm_size: 67108864
+    memswap_reservation: 536870912
     kernel_memory: 0
     name: config
+    mem_limit: 536870912
+    cpu_shares: 50
+    cap_add:
+      - all
   registry:
     environment:
       - CONFIG_SERVICE_PASSWORD=configPwd
@@ -62,6 +77,7 @@ services:
   gateway:
     environment:
       - CONFIG_SERVICE_PASSWORD=configPwd
+      - 'availability:az==2'
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/gateway:latest
     hostname: gateway
@@ -75,13 +91,30 @@ services:
         max-file: '10'
         max-size: 10m
     labels:
-      aliyun.scale: '1'
+      aliyun.probe.url: 'http://container:4000/index.html'
+      aliyun.probe.initial_delay_seconds: '5'
+      aliyun.probe.timeout_seconds: '3'
+      aliyun.routing.session_sticky: 'true'
+      aliyun.scale: '2'
       aliyun.routing.port_4000: gateway
-    memswap_limit: 0
-    shm_size: 0
-    memswap_reservation: 0
+      aliyun.rolling_updates: 'true'
+      aliyun.auto_scaling.max_cpu: '70'
+      aliyun.auto_scaling.min_cpu: '30'
+      aliyun.auto_scaling.step: '1'
+      aliyun.auto_scaling.max_instances: '10'
+      aliyun.auto_scaling.min_instances: '1'
+      aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
+      aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
+    oom-kill-disable: true
+    memswap_limit: 2000000000
+    shm_size: 67108864
+    memswap_reservation: 536870912
     kernel_memory: 0
     name: gateway
+    mem_limit: 536870912
+    cpu_shares: 50
+    cap_add:
+      - all
   auth-service:
     environment:
       - MONGODB_PASSWORD=mongodbPwd
@@ -101,6 +134,8 @@ services:
         max-size: 10m
     labels:
       aliyun.scale: '1'
+      aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
+      aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
     volumes:
       - 'volume_name_piggymetrics:/data/oss:rw'
       - 'VN_NAS_PIGGYMETRICS:/data/nas:rw'
@@ -125,6 +160,7 @@ services:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
       ACCOUNT_SERVICE_PASSWORD: $ACCOUNT_SERVICE_PASSWORD
       MONGODB_PASSWORD: $MONGODB_PASSWORD
+      affinity: service!=account-mongodb
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/account-service
     hostname: account-service
@@ -136,6 +172,10 @@ services:
       options:
         max-size: 10m
         max-file: '10'
+    labels:
+      aliyun.scale: '1'
+      aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
+      aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
   account-mongodb:
     environment:
       INIT_DUMP: account-service-dump.js
@@ -163,6 +203,9 @@ services:
       options:
         max-size: 10m
         max-file: '10'
+    labels:
+      aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
+      aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
   statistics-mongodb:
     environment:
       MONGODB_PASSWORD: $MONGODB_PASSWORD
@@ -189,6 +232,9 @@ services:
       options:
         max-size: 10m
         max-file: '10'
+    labels:
+      aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
+      aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
   notification-mongodb:
     image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
     hostname: notification-mongodb
