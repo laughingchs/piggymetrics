@@ -1,0 +1,240 @@
+version: '2.1'
+services:
+  rabbitmq:
+    image: 'rabbitmq:3-management'
+    hostname: rabbitmq
+    restart: always
+    ports:
+      - '15672:15672'
+    logging:
+      options:
+        max-file: '10'
+        max-size: 10m
+    labels:
+      aliyun.scale: '1'
+      aliyun.routing.port_15672: rabbitmq
+    memswap_limit: 0
+    shm_size: 0
+    memswap_reservation: 0
+    kernel_memory: 0
+    name: rabbitmq
+  config:
+    environment:
+      - CONFIG_SERVICE_PASSWORD=configPwd
+    image: >-
+      registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/config:latest
+    hostname: config
+    restart: always
+    logging:
+      options:
+        max-file: '10'
+        max-size: 10m
+    labels:
+      aliyun.scale: '3'
+    memswap_limit: 0
+    shm_size: 0
+    memswap_reservation: 0
+    kernel_memory: 0
+    name: config
+  registry:
+    environment:
+      - CONFIG_SERVICE_PASSWORD=configPwd
+    image: >-
+      registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/registry:latest
+    hostname: registry
+    restart: always
+    depends_on:
+      - config
+    ports:
+      - '8761:8761'
+    logging:
+      options:
+        max-file: '10'
+        max-size: 10m
+    labels:
+      aliyun.scale: '1'
+      aliyun.routing.port_8761: eureka
+    memswap_limit: 0
+    shm_size: 0
+    memswap_reservation: 0
+    kernel_memory: 0
+    name: registry
+  gateway:
+    environment:
+      - CONFIG_SERVICE_PASSWORD=configPwd
+    image: >-
+      registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/gateway:latest
+    hostname: gateway
+    restart: always
+    depends_on:
+      - config
+    ports:
+      - '80:4000'
+    logging:
+      options:
+        max-file: '10'
+        max-size: 10m
+    labels:
+      aliyun.scale: '1'
+      aliyun.routing.port_4000: gateway
+    memswap_limit: 0
+    shm_size: 0
+    memswap_reservation: 0
+    kernel_memory: 0
+    name: gateway
+  auth-service:
+    environment:
+      - MONGODB_PASSWORD=mongodbPwd
+      - NOTIFICATION_SERVICE_PASSWORD=notificationPwd
+      - STATISTICS_SERVICE_PASSWORD=statisticsPwd
+      - ACCOUNT_SERVICE_PASSWORD=accountPwd
+      - CONFIG_SERVICE_PASSWORD=configPwd
+    image: >-
+      registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/auth-service:latest
+    hostname: auth-service
+    restart: always
+    depends_on:
+      - config
+    logging:
+      options:
+        max-file: '10'
+        max-size: 10m
+    labels:
+      aliyun.scale: '1'
+    volumes:
+      - 'volume_name_piggymetrics:/data/oss:rw'
+      - 'VN_NAS_PIGGYMETRICS:/data/nas:rw'
+      - 'VN_YUNPAN_PIGGYMETRICS:/data/yunpan:rw'
+    memswap_limit: 0
+    shm_size: 0
+    memswap_reservation: 0
+    kernel_memory: 0
+    name: auth-service
+  auth-mongodb:
+    environment:
+      MONGODB_PASSWORD: $MONGODB_PASSWORD
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
+    hostname: auth-mongodb
+    restart: always
+    logging:
+      options:
+        max-size: 10m
+        max-file: '10'
+  account-service:
+    environment:
+      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+      ACCOUNT_SERVICE_PASSWORD: $ACCOUNT_SERVICE_PASSWORD
+      MONGODB_PASSWORD: $MONGODB_PASSWORD
+    image: >-
+      registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/account-service
+    hostname: account-service
+    restart: always
+    depends_on:
+      config:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: 10m
+        max-file: '10'
+  account-mongodb:
+    environment:
+      INIT_DUMP: account-service-dump.js
+      MONGODB_PASSWORD: $MONGODB_PASSWORD
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
+    hostname: account-mongodb
+    restart: always
+    logging:
+      options:
+        max-size: 10m
+        max-file: '10'
+  statistics-service:
+    environment:
+      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+      MONGODB_PASSWORD: $MONGODB_PASSWORD
+      STATISTICS_SERVICE_PASSWORD: $STATISTICS_SERVICE_PASSWORD
+    image: >-
+      registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/statistics-service
+    hostname: statistics-service
+    restart: always
+    depends_on:
+      config:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: 10m
+        max-file: '10'
+  statistics-mongodb:
+    environment:
+      MONGODB_PASSWORD: $MONGODB_PASSWORD
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
+    hostname: statistics-mongodb
+    restart: always
+    logging:
+      options:
+        max-size: 10m
+        max-file: '10'
+  notification-service:
+    environment:
+      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+      MONGODB_PASSWORD: $MONGODB_PASSWORD
+      NOTIFICATION_SERVICE_PASSWORD: $NOTIFICATION_SERVICE_PASSWORD
+    image: >-
+      registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/notification-service
+    hostname: notification-service
+    restart: always
+    depends_on:
+      config:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: 10m
+        max-file: '10'
+  notification-mongodb:
+    image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
+    hostname: notification-mongodb
+    restart: always
+    environment:
+      MONGODB_PASSWORD: $MONGODB_PASSWORD
+    logging:
+      options:
+        max-size: 10m
+        max-file: '10'
+  monitoring:
+    environment:
+      - CONFIG_SERVICE_PASSWORD=configPwd
+    image: >-
+      registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/monitoring:latest
+    hostname: monitoring
+    restart: always
+    depends_on:
+      - config
+    ports:
+      - '9000:9000'
+    logging:
+      options:
+        max-size: 10m
+        max-file: '10'
+    labels:
+      aliyun.scale: '1'
+      aliyun.routing.port_9000: hystrix
+    memswap_limit: 0
+    shm_size: 0
+    memswap_reservation: 0
+    kernel_memory: 0
+    name: monitoring
+  turbine-stream-service:
+    environment:
+      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+    image: >-
+      registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/turbine-stream-service
+    hostname: turbine-stream-service
+    restart: always
+    depends_on:
+      config:
+        condition: service_healthy
+    ports:
+      - '8989:8989'
+    logging:
+      options:
+        max-size: 10m
+        max-file: '10'
