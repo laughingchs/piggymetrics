@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://${RDS_URL}:3306/piggymetrics
+    username: piggymetrics
+    password: ${RDS_PASSWORD}

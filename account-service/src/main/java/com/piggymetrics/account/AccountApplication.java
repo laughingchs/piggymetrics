@@ -1,5 +1,6 @@
 package com.piggymetrics.account;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
@@ -9,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 
 @SpringBootApplication
+@MapperScan("com.piggymetrics.account.repository.**")
 @EnableDiscoveryClient
 @EnableOAuth2Client
 @EnableFeignClients

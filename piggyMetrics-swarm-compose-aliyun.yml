@@ -161,6 +161,8 @@ services:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
       ACCOUNT_SERVICE_PASSWORD: $ACCOUNT_SERVICE_PASSWORD
       MONGODB_PASSWORD: $MONGODB_PASSWORD
+      RDS_PASSWORD: $RDS_PASSWORD
+      RDS_URL: $RDS_URL
       affinity: service!=account-mongodb
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/account-service
