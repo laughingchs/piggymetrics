@@ -142,6 +142,7 @@ services:
       aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
       aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
       aliyun.log.timestamp: false # Docker 在收集日志的时候可以选择是否添加 timestamp
+      aliyun.routing.port_5000: auth-service.local
       aliyun.depends: config
     links:
       - auth-mongodb
