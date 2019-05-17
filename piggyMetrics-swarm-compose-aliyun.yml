@@ -1,7 +1,8 @@
 version: '2.1'
 services:
   rabbitmq:
-    image: 'rabbitmq:3-management'
+    image: >-
+      registry-vpc.cn-hangzhou.aliyuncs.com/hd_docker_images/rabbitmq:latest
     hostname: rabbitmq
     restart: always
     ports:
@@ -33,6 +34,8 @@ services:
       aliyun.probe.cmd: >-
         curl -u user:configPwd
         http://127.0.0.1:8888/account-service/spring.data.mongodb.host
+      aliyun.probe.initial_delay_seconds: '30'
+      aliyun.probe.timeout_seconds: '30'
       aliyun.scale: '1'
       aliyun.rolling_updates: 'true'
       aliyun.auto_scaling.max_cpu: '70'
@@ -93,7 +96,7 @@ services:
       aliyun.probe.initial_delay_seconds: '5'
       aliyun.probe.timeout_seconds: '3'
       aliyun.routing.session_sticky: 'true'
-      aliyun.scale: '10'
+      aliyun.scale: '1'
       aliyun.routing.port_4000: gateway;gateway.swarm.piggymetrics.com
       aliyun.rolling_updates: 'true'
       aliyun.rolling_updates.parallelism: '2'
@@ -187,6 +190,7 @@ services:
       - auth-service.local
     links:
       - account-mongodb:account-mongodb
+      - account-db:account-db
     depends_on:
       config:
         condition: service_healthy
@@ -201,6 +205,13 @@ services:
       aliyun.log_store_monitorLog: /var/log/monitor/monitor_digest.log # 采集monitor_digest日志到requestlog日志库中
       aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
       aliyun.log.timestamp: true # Docker 在收集日志的时候可以选择是否添加 timestamp
+
+  account-db:
+    external:
+      host: $RDS_URL
+      ports:
+        - 3306
+
   account-mongodb:
     environment:
       INIT_DUMP: account-service-dump.js
