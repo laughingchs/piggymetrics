@@ -41,6 +41,9 @@ public class AccountFlow {
     @Column
     private String afterValue;
 
+    @Column
+    private String deployClusterName;
+
     /**
      * Getter method for property <tt>id</tt>.
      *
@@ -165,5 +168,23 @@ public class AccountFlow {
      */
     public void setAfterValue(String afterValue) {
         this.afterValue = afterValue;
+    }
+
+    /**
+     * Getter method for property <tt>deployClusterName</tt>.
+     *
+     * @return property value of deployClusterName
+     */
+    public String getDeployClusterName() {
+        return deployClusterName;
+    }
+
+    /**
+     * Setter method for property <tt>deployClusterName</tt>.
+     *
+     * @param deployClusterName value to be assigned to property deployClusterName
+     */
+    public void setDeployClusterName(String deployClusterName) {
+        this.deployClusterName = deployClusterName;
     }
 }

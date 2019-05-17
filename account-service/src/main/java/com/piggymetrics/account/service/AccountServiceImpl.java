@@ -1,5 +1,10 @@
 package com.piggymetrics.account.service;
 
+import java.math.BigDecimal;
+import java.util.Date;
+
+import com.alibaba.fastjson.JSONObject;
+
 import com.piggymetrics.account.client.AuthServiceClient;
 import com.piggymetrics.account.client.StatisticsServiceClient;
 import com.piggymetrics.account.domain.Account;
@@ -12,18 +17,18 @@ import com.piggymetrics.account.repository.IAccountFlowMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
-import com.alibaba.fastjson.JSONObject;
-
 @Service
+@ConfigurationProperties
 public class AccountServiceImpl implements AccountService {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private final Logger monitorLog = LoggerFactory.getLogger("BIZ_MONITOR_LOGGER");
 
     @Autowired
     private StatisticsServiceClient statisticsClient;
@@ -37,6 +42,9 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     private IAccountFlowMapper iAccountFlowMapper;
 
+    @Value("${deploy.cluster.name}")
+    private String deployClusterName;
+
     /**
      * {@inheritDoc}
      */
@@ -44,6 +52,7 @@ public class AccountServiceImpl implements AccountService {
     public Account findByName(String accountName) {
         Assert.hasLength(accountName);
         Account account = repository.findByName(accountName);
+        account.setDeployClusterName(deployClusterName);
 
         AccountFlow accountFlow = new AccountFlow();
         accountFlow.setGmtCreate(new Date());
@@ -51,7 +60,11 @@ public class AccountServiceImpl implements AccountService {
         accountFlow.setName(account.getName());
         accountFlow.setAction("findByName");
         accountFlow.setBeforeValue(JSONObject.toJSONString(account));
+        accountFlow.setDeployClusterName(deployClusterName);
         iAccountFlowMapper.insertAccountFlow(accountFlow);
+
+        log.info("集群:{};查询账号:{}信息如下:{}", deployClusterName, accountName, JSONObject.toJSONString(account));
+        monitorLog.info("actionType:findByName;cluster:{};accountName:{}", deployClusterName, accountName);
 
         return account;
     }
@@ -92,6 +105,8 @@ public class AccountServiceImpl implements AccountService {
 
         log.info("new account has been created: " + account.getName());
 
+        log.info("集群:{};创建账号:{};信息如下:{}", deployClusterName, user.getUsername(), JSONObject.toJSONString(account));
+        monitorLog.info("actionType:createAccount;cluster:{};accountName:{}", deployClusterName, user.getUsername());
         return account;
     }
 
@@ -124,5 +139,8 @@ public class AccountServiceImpl implements AccountService {
         log.debug("account {} changes has been saved", name);
 
         statisticsClient.updateStatistics(name, account);
+
+        log.info("集群:{};保存账号:{};变更信息如下:{}", deployClusterName, name, JSONObject.toJSONString(account));
+        monitorLog.info("actionType:saveChanges;cluster:{};accountName:{}", deployClusterName, name);
     }
 }

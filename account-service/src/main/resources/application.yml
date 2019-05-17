@@ -4,3 +4,12 @@ spring:
     url: jdbc:mysql://${RDS_URL}:3306/piggymetrics
     username: piggymetrics
     password: ${RDS_PASSWORD}
+
+deploy:
+  cluster:
+    name: ${CLUSTER_NAME}
+
+logging:
+  level:
+    root: 'info'
+  config: 'classpath:logback-spring.xml'

@@ -21,7 +21,6 @@ services:
   config:
     environment:
       - CONFIG_SERVICE_PASSWORD=configPwd
-      - 'availability:az==2'
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/config:latest
     hostname: config
@@ -77,7 +76,6 @@ services:
   gateway:
     environment:
       - CONFIG_SERVICE_PASSWORD=configPwd
-      - 'availability:az==2'
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/gateway:latest
     hostname: gateway
@@ -95,9 +93,10 @@ services:
       aliyun.probe.initial_delay_seconds: '5'
       aliyun.probe.timeout_seconds: '3'
       aliyun.routing.session_sticky: 'true'
-      aliyun.scale: '2'
-      aliyun.routing.port_4000: gateway
+      aliyun.scale: '10'
+      aliyun.routing.port_4000: gateway;gateway.swarm.piggymetrics.com
       aliyun.rolling_updates: 'true'
+      aliyun.rolling_updates.parallelism: '2'
       aliyun.auto_scaling.max_cpu: '70'
       aliyun.auto_scaling.min_cpu: '30'
       aliyun.auto_scaling.step: '1'
@@ -106,6 +105,8 @@ services:
       aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
       aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
       aliyun.log.timestamp: true # Docker 在收集日志的时候可以选择是否添加 timestamp
+    external_links:
+      - auth-service.local
     oom-kill-disable: true
     memswap_limit: 2000000000
     shm_size: 67108864
@@ -123,9 +124,11 @@ services:
       - STATISTICS_SERVICE_PASSWORD=statisticsPwd
       - ACCOUNT_SERVICE_PASSWORD=accountPwd
       - CONFIG_SERVICE_PASSWORD=configPwd
+      - CLUSTER_NAME=$CLUSTER_NAME
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/auth-service:latest
     hostname: auth-service
+    command: ["java", "-Xmx200m", "-jar", "/app/auth-service.jar"]
     restart: always
     logging:
       options:
@@ -137,25 +140,36 @@ services:
       aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
       aliyun.log.timestamp: false # Docker 在收集日志的时候可以选择是否添加 timestamp
       aliyun.depends: config
+    links:
+      - auth-mongodb
     volumes:
       - 'volume_name_piggymetrics:/data/oss:rw'
       - 'VN_NAS_PIGGYMETRICS:/data/nas:rw'
       - 'VN_YUNPAN_PIGGYMETRICS:/data/yunpan:rw'
+      - '/var/run/docker.sock:/var/run/docker.sock:rw'
     memswap_limit: 0
     shm_size: 0
     memswap_reservation: 0
     kernel_memory: 0
     name: auth-service
+    cap_add:
+      - all
+    cap_drop:
+      - SETGID
+      - SETUID
   auth-mongodb:
     environment:
       MONGODB_PASSWORD: $MONGODB_PASSWORD
+      constraint: group==db
     image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
-    hostname: auth-mongodb
     restart: always
     logging:
       options:
         max-size: 10m
         max-file: '10'
+    devices:
+      - /dev/mem:/dev/mem
+
   account-service:
     environment:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
@@ -163,11 +177,16 @@ services:
       MONGODB_PASSWORD: $MONGODB_PASSWORD
       RDS_PASSWORD: $RDS_PASSWORD
       RDS_URL: $RDS_URL
+      CLUSTER_NAME: $CLUSTER_NAME
       affinity: service!=account-mongodb
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/account-service
     hostname: account-service
     restart: always
+    external_links:
+      - auth-service.local
+    links:
+      - account-mongodb:account-mongodb
     depends_on:
       config:
         condition: service_healthy
@@ -178,14 +197,16 @@ services:
     labels:
       aliyun.scale: '1'
       aliyun.log_store_requestlog: stdout  # 采集stdout日志到requestlog日志库中
+      aliyun.log_store_errorLog: /var/log/common/common_error.log # 采集error日志到requestlog日志库中
+      aliyun.log_store_monitorLog: /var/log/monitor/monitor_digest.log # 采集monitor_digest日志到requestlog日志库中
       aliyun.log_ttl_requestlog: 30  # 设置requestlog日志库日志数据保存30天
       aliyun.log.timestamp: true # Docker 在收集日志的时候可以选择是否添加 timestamp
   account-mongodb:
     environment:
       INIT_DUMP: account-service-dump.js
       MONGODB_PASSWORD: $MONGODB_PASSWORD
+      constraint: group==db
     image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
-    hostname: account-mongodb
     restart: always
     logging:
       options:
@@ -199,6 +220,8 @@ services:
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/statistics-service
     hostname: statistics-service
+    external_links:
+      - auth-service.local
     restart: always
     depends_on:
       config:
@@ -214,6 +237,7 @@ services:
   statistics-mongodb:
     environment:
       MONGODB_PASSWORD: $MONGODB_PASSWORD
+      constraint: group==db
     image: registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/mongodb
     hostname: statistics-mongodb
     restart: always
@@ -229,6 +253,8 @@ services:
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/notification-service
     hostname: notification-service
+    external_links:
+      - auth-service.local
     restart: always
     depends_on:
       config:
@@ -247,6 +273,7 @@ services:
     restart: always
     environment:
       MONGODB_PASSWORD: $MONGODB_PASSWORD
+      constraint: group==db
     logging:
       options:
         max-size: 10m

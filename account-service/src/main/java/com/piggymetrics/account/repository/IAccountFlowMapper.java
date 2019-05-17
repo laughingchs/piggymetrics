@@ -25,9 +25,11 @@ public interface IAccountFlowMapper {
     @Select("select * from account_flow order by id desc limit 100")
     List<AccountFlow> findAllFlows();
 
-    @Insert("INSERT INTO account_flow(gmtCreate, gmtModified, name,action,beforeValue,afterValue) VALUES(#{gmtCreate},"
-            + "#{gmtModified}, "
-            + "#{name}, #{action}, "
-            + "#{beforeValue},#{afterValue})")
+    @Insert(
+        "INSERT INTO account_flow(gmtCreate, gmtModified, name,action,beforeValue,afterValue,deployClusterName) "
+        + "VALUES(#{gmtCreate},"
+        + "#{gmtModified}, "
+        + "#{name}, #{action}, "
+        + "#{beforeValue},#{afterValue},#{deployClusterName})")
     int insertAccountFlow(AccountFlow accountFlow);
 }
