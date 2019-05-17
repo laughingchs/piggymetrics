@@ -130,7 +130,6 @@ services:
       - CLUSTER_NAME=$CLUSTER_NAME
     image: >-
       registry-vpc.cn-zhangjiakou.aliyuncs.com/goomoon-piggymetrics/auth-service:latest
-    hostname: auth-service
     command: ["java", "-Xmx200m", "-jar", "/app/auth-service.jar"]
     restart: always
     logging:
